@@ -62,6 +62,7 @@ type Config struct {
 }
 
 type MySqlConfig struct {
+	Id                    string `ini:"id"`
 	User                  string `ini:"user"`
 	Password              string `ini:"password"`
 	Host                  string `ini:"host"`
@@ -240,6 +241,10 @@ func (m MySqlConfig) CustomizeTLS() (string, error) {
 		return "", nil
 	}
 	tlsCfg.InsecureSkipVerify = m.TlsInsecureSkipVerify
-	mysql.RegisterTLSConfig("custom", &tlsCfg)
-	return "custom", nil
+	id := "custom"
+	if m.Id != "" {
+		id = m.Id
+	}
+	mysql.RegisterTLSConfig(id, &tlsCfg)
+	return id, nil
 }
