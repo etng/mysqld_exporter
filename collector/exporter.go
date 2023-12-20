@@ -147,9 +147,8 @@ func (e *Exporter) scrape(ctx context.Context, ch chan<- prometheus.Metric) floa
 	db.SetMaxIdleConns(1)
 	// Set max lifetime for a connection.
 	db.SetConnMaxLifetime(1 * time.Minute)
-
 	if err := db.PingContext(ctx); err != nil {
-		level.Error(e.logger).Log("msg", "Error pinging mysqld", "err", err)
+		level.Error(e.logger).Log("msg", "Error pinging mysqld", "err", err, "dsn", e.dsn)
 		return 0.0
 	}
 

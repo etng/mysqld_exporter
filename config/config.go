@@ -201,45 +201,45 @@ func (m MySqlConfig) FormDSN(target string) (string, error) {
 		config.Addr = target
 	}
 
-	if m.TlsInsecureSkipVerify {
-		config.TLSConfig = "skip-verify"
-	} else {
-		config.TLSConfig = m.Tls
-		if m.SslCa != "" {
-			if err := m.CustomizeTLS(); err != nil {
-				err = fmt.Errorf("failed to register a custom TLS configuration for mysql dsn: %w", err)
-				return "", err
-			}
-			config.TLSConfig = "custom"
-		}
+	if config.TLSConfig, err = m.CustomizeTLS(); err != nil {
+		err = fmt.Errorf("failed to register a custom TLS configuration for mysql dsn: %w", err)
+		return "", err
 	}
 
 	return config.FormatDSN(), nil
 }
 
-func (m MySqlConfig) CustomizeTLS() error {
+func (m MySqlConfig) CustomizeTLS() (string, error) {
 	var tlsCfg tls.Config
-	caBundle := x509.NewCertPool()
-	pemCA, err := os.ReadFile(m.SslCa)
-	if err != nil {
-		return err
-	}
-	if ok := caBundle.AppendCertsFromPEM(pemCA); ok {
-		tlsCfg.RootCAs = caBundle
-	} else {
-		return fmt.Errorf("failed parse pem-encoded CA certificates from %s", m.SslCa)
+	useTls := false
+	if m.SslCa != "" {
+		caBundle := x509.NewCertPool()
+		pemCA, err := os.ReadFile(m.SslCa)
+		if err != nil {
+			return "", err
+		}
+		if ok := caBundle.AppendCertsFromPEM(pemCA); ok {
+			tlsCfg.RootCAs = caBundle
+		} else {
+			return "", fmt.Errorf("failed parse pem-encoded CA certificates from %s", m.SslCa)
+		}
+		useTls = true
 	}
 	if m.SslCert != "" && m.SslKey != "" {
 		certPairs := make([]tls.Certificate, 0, 1)
 		keypair, err := tls.LoadX509KeyPair(m.SslCert, m.SslKey)
 		if err != nil {
-			return fmt.Errorf("failed to parse pem-encoded SSL cert %s or SSL key %s: %w",
+			return "", fmt.Errorf("failed to parse pem-encoded SSL cert %s or SSL key %s: %w",
 				m.SslCert, m.SslKey, err)
 		}
 		certPairs = append(certPairs, keypair)
 		tlsCfg.Certificates = certPairs
+		useTls = true
+	}
+	if !useTls {
+		return "", nil
 	}
 	tlsCfg.InsecureSkipVerify = m.TlsInsecureSkipVerify
 	mysql.RegisterTLSConfig("custom", &tlsCfg)
-	return nil
+	return "custom", nil
 }
