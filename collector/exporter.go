@@ -158,7 +158,7 @@ func (e *Exporter) scrape(ctx context.Context, ch chan<- prometheus.Metric) floa
 	e.instance = instance
 
 	if err := instance.Ping(); err != nil {
-		e.logger.Error("Error pinging mysqld", "err", err)
+		e.logger.Error("Error pinging mysqld", "err", err, "dsn", e.dsn)
 		return 0.0
 	}
 

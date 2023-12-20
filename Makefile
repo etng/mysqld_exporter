@@ -20,7 +20,7 @@ include Makefile.common
 
 STATICCHECK_IGNORE =
 
-DOCKER_IMAGE_NAME ?= mysqld-exporter
+DOCKER_IMAGE_NAME ?= zz_mysqld_exporter
 
 .PHONY: test-docker-single-exporter
 test-docker-single-exporter:

@@ -49,6 +49,7 @@ func handleProbe(scrapers []collector.Scraper, logger *slog.Logger) http.Handler
 			return
 		}
 		dsn, err := cfgsection.FormDSN(target)
+		logger.Debug("w855q7qntp", "dsn", dsn)
 		if err != nil {
 			logger.Error(fmt.Sprintf("Failed to form dsn from section [%s]", authModule), "err", err)
 			http.Error(w, fmt.Sprintf("Error forming dsn from config section [%s]", authModule), http.StatusBadRequest)
